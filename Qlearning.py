@@ -20,13 +20,15 @@ class QlearningAgent:
             will only learn from immediate rewards. Setting it to 1 means that the
             agent will learn from all rewards equally.
     '''
-    
+
     def __init__(self, epsilon=0.2, player='X', learningRate=0.05, discountFactor=0.99):
         self.epsilon = epsilon
         self.player = player # 'X' or 'O'
         self.learningRate = learningRate
         self.discountFactor = discountFactor
         self.Q = {} # use get(key, default)
+        self.s = None
+        self.a = None
 
     def set_player(self, player = 'X', j=-1):
         self.player = player
@@ -48,15 +50,50 @@ class QlearningAgent:
 
         return avail[random.randint(0, len(avail)-1)]
 
-    def train(self, grid, **kwargs):
+    def bestMove(self, grid):
         """
-        Goes through a hierarchy of moves, making the best move that
-        is currently available each time (with probabitity 1-self.epsilon).
-        A touple is returned that represents (row, col).
+        TODO
         """
+        # Get the available moves
+        avail = self.empty(grid)
+
+        # Get the best move
+        best_moves = []
+        best_value = -999
+        for move in avail:
+            Qsa = self.Q.get((self.s, move), 0)
+            if Qsa > best_value:
+                best_moves.append(move)
+                best_value = Qsa
+
+        return random.choice(best_moves)
+
+    def act(self, grid, **kwargs):
+        """
+        TODO
+        """
+
+        self.s = tuple(grid)
+
         # whether move in random or not
         if random.random() < self.epsilon:
-            return self.randomMove(grid)
+            self.a = self.randomMove(grid)
+        else:
+            # Get the best move
+            self.a = self.bestMove(grid)
 
-        # random move
-        return self.randomMove(grid)
+        return self.a
+
+    def learn(self, grid, reward):
+        """
+        TODO
+        """
+        s_prime = tuple(grid)
+
+        # Get the best move
+        a_prime = self.bestMove(grid)
+
+        # Update the Q-value
+        deltaQsa = self.Q.get((self.s, self.a), 0) + self.learningRate * (reward + self.discountFactor * self.Q.get((s_prime, a_prime), 0) - self.Q.get((self.s, self.a), 0))
+
+        self.Q[(self.s, self.a)] = deltaQsa
