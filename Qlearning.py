@@ -1,8 +1,30 @@
 import numpy as np
 import random
 
+class Qtable:
+    def __init__(self, Qtab={}, defaultValue=0.0):
+        self.Qtab = Qtab
+        self.defaultValue = defaultValue
+
+    def hash(self, state_action):
+        """
+        TODO
+        """
+        state, action = state_action
+
+        hashState = (state.flatten()+1)@np.array([3**0,3**1,3**2,3**3,3**4,3**5,3**6,3**7,3**8])
+        hashAction = action[0]*3**9 + action[1]*3**10
+        return hashState + hashAction
+    
+    def __getitem__(self, key: tuple):
+        return self.Qtab.get(self.hash(key), self.defaultValue)
+
+    def __setitem__(self, key: tuple, value):
+        self.Qtab[self.hash(key)] = value
+        
+
 class QlearningAgent:
-    '''
+    """
     Description:
         A class to implement an epsilon-greedy Qlearning Agent in Tic-tac-toe.
 
@@ -19,81 +41,97 @@ class QlearningAgent:
             worth less than immediate rewards. Setting it to 0 means that the agent
             will only learn from immediate rewards. Setting it to 1 means that the
             agent will learn from all rewards equally.
-    '''
+    """
 
-    def __init__(self, epsilon=0.2, player='X', learningRate=0.05, discountFactor=0.99):
-        self.epsilon = epsilon
+    def __init__(self, epsilon=0.2, player='X', learningRate=0.05, discountFactor=0.99, Q={}, Q_defaultValue=0.0):
+        if isinstance(epsilon, tuple):
+            self.epsilon_min, self.epsilon_max = epsilon
+            self.epsilon = self.epsilon_max
+        else:
+            self.epsilon = epsilon
+            self.epsilon_min = epsilon
+            self.epsilon_max = epsilon
         self.player = player # 'X' or 'O'
         self.learningRate = learningRate
         self.discountFactor = discountFactor
-        self.Q = {} # use get(key, default)
-        self.s = None
-        self.a = None
+        self.Q = Qtable(Q, Q_defaultValue)
+        self.state = None
+        self.action = None
+
+    def decrease_epsilon(self, n, n_max):
+        self.epsilon = max(self.epsilon_min, self.epsilon_max * (1 - n / n_max))
+
 
     def set_player(self, player = 'X', j=-1):
         self.player = player
         if j != -1:
             self.player = 'X' if j % 2 == 0 else 'O'
 
-    def empty(self, grid):
-        '''return all empty positions'''
-        avail = []
-        for i in range(9):
-            pos = (int(i/3), i % 3)
-            if grid[pos] == 0:
-                avail.append(pos)
-        return avail
+    def empty(self, state):
+        """ Return all empty positions. """
+        availableActions = []
+        for x in range(3):
+            for y in range(3):
+                position = (x, y)
+                if state[position] == 0:
+                    availableActions.append(position)
+        return availableActions
 
-    def randomMove(self, grid):
-        """ Chose a random move from the available options. """
-        avail = self.empty(grid)
+    def randomAction(self, state):
+        """ Choose a random action from the available options. """
+        availableActions = self.empty(state)
 
-        return avail[random.randint(0, len(avail)-1)]
+        return random.choice(availableActions)
 
-    def bestMove(self, grid):
+    def bestAction(self, state):
         """
-        TODO
+        Choose the available actions which have a maximum expected future reward. 
+        If there are multiple actions with the same maximum expected future reward,
+        choose one of them at random.
         """
         # Get the available moves
-        avail = self.empty(grid)
+        availableActions = self.empty(state)
 
         # Get the best move
-        best_moves = []
-        best_value = -999
-        for move in avail:
-            Qsa = self.Q.get((self.s, move), 0)
-            if Qsa > best_value:
-                best_moves.append(move)
-                best_value = Qsa
+        bestActions = []
+        bestValue = -999.0
+        for action in availableActions:
+            Qsa = self.Q[(state, action)]
+            if Qsa == bestValue:
+                bestActions.append(action)
+            if Qsa > bestValue:
+                bestActions = [action]
+                bestValue = Qsa
 
-        return random.choice(best_moves)
+        return random.choice(bestActions)
 
-    def act(self, grid, **kwargs):
+    def act(self, state):
         """
         TODO
         """
-
-        self.s = tuple(grid)
+        self.state = state
 
         # whether move in random or not
         if random.random() < self.epsilon:
-            self.a = self.randomMove(grid)
+            self.action = self.randomAction(state)
         else:
             # Get the best move
-            self.a = self.bestMove(grid)
+            self.action = self.bestAction(state)
 
-        return self.a
+        return self.action
 
-    def learn(self, grid, reward):
+    def learn(self, s_prime, reward, end=False):
         """
         TODO
         """
-        s_prime = tuple(grid)
+        if not end:
+            # Get the best move
+            a_prime = self.bestAction(s_prime)
 
-        # Get the best move
-        a_prime = self.bestMove(grid)
+            # Update the Q-value
+            self.Q[(self.state, self.action)] += self.learningRate * (reward + self.discountFactor * self.Q[(s_prime, a_prime)] - self.Q[(self.state, self.action)])
+        else:
+            self.Q[(self.state, self.action)] += self.learningRate * (reward - self.Q[(self.state, self.action)])
 
-        # Update the Q-value
-        deltaQsa = self.Q.get((self.s, self.a), 0) + self.learningRate * (reward + self.discountFactor * self.Q.get((s_prime, a_prime), 0) - self.Q.get((self.s, self.a), 0))
-
-        self.Q[(self.s, self.a)] = deltaQsa
+            self.state = None
+            self.action = None
