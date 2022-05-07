@@ -43,7 +43,7 @@ class QlearningAgent:
             agent will learn from all rewards equally.
     """
 
-    def __init__(self, epsilon=0.2, player='X', learningRate=0.05, discountFactor=0.99, Q={}, Q_defaultValue=0.0):
+    def __init__(self, epsilon=0.2, player='X', learningRate=0.05, discountFactor=0.99, Q={}, Q_defaultValue=0.0, n_max=100):
         if isinstance(epsilon, tuple):
             self.epsilon_min, self.epsilon_max = epsilon
             self.epsilon = self.epsilon_max
@@ -58,8 +58,13 @@ class QlearningAgent:
         self.state = None
         self.action = None
 
-    def decrease_epsilon(self, n, n_max):
-        self.epsilon = max(self.epsilon_min, self.epsilon_max * (1 - n / n_max))
+        self.n = 0
+        self.n_max = n_max
+
+        self.isLearning = True
+
+    def decrease_epsilon(self):
+        self.epsilon = max(self.epsilon_min, self.epsilon_max * (1 - self.n / self.n_max))
 
 
     def set_player(self, player = 'X', j=-1):
@@ -124,14 +129,18 @@ class QlearningAgent:
         """
         TODO
         """
-        if not end:
-            # Get the best move
-            a_prime = self.bestAction(s_prime)
+        if self.isLearning:
+            if not end:
+                # Get the best move
+                a_prime = self.bestAction(s_prime)
 
-            # Update the Q-value
-            self.Q[(self.state, self.action)] += self.learningRate * (reward + self.discountFactor * self.Q[(s_prime, a_prime)] - self.Q[(self.state, self.action)])
-        else:
-            self.Q[(self.state, self.action)] += self.learningRate * (reward - self.Q[(self.state, self.action)])
+                # Update the Q-value
+                self.Q[(self.state, self.action)] += self.learningRate * (reward + self.discountFactor * self.Q[(s_prime, a_prime)] - self.Q[(self.state, self.action)])
+            else:
+                self.Q[(self.state, self.action)] += self.learningRate * (reward - self.Q[(self.state, self.action)])
 
-            self.state = None
-            self.action = None
+                self.state = None
+                self.action = None
+
+                self.n += 1
+                self.decrease_epsilon()
