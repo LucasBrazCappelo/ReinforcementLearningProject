@@ -1,5 +1,4 @@
-name: pre-commit
-
+name: Pre-commit Checks
 on:
   pull_request:
   push:
@@ -7,10 +6,30 @@ on:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
- 
-      - uses: pre-commit/action@v3.0.0
-        with:
-          extra_args: terraform_fmt --all-files
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install pre-commit
+      run: pip install pre-commit
+
+    - name: Install dependencies
+      run: pre-commit install-hooks
+
+    - name: Run pre-commit checks
+      run: pre-commit run --all-files
+
+    - name: Push changes
+      if: ${{ failure() }}
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git commit -am "Apply pre-commit checks" || true
+        git push origin ${{ github.ref }}
+
