@@ -32,4 +32,3 @@ jobs:
         git config user.email "actions@github.com"
         git commit -am "Apply pre-commit checks" || true
         git push origin ${{ github.ref }}
-
