@@ -8,6 +8,7 @@ repos:
       - id: check-builtin-literals # Require literal syntax when initializing empty or zero Python builtin types
       - id: check-docstring-first # Check a common error of defining a docstring after code
       - id: check-merge-conflict # Check for files that contain merge conflict strings
+      - id: check-yaml # Check yaml files
       - id: end-of-file-fixer # Ensure that a file is either empty, or ends with one newline
       - id: mixed-line-ending # Replace or checks mixed line ending
       - id: trailing-whitespace # This hook trims trailing whitespace
@@ -18,6 +19,8 @@ repos:
     - id: black-jupyter
       args: ["--line-length", "100"]
       language_version: python3.8
+
+
 -   repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
