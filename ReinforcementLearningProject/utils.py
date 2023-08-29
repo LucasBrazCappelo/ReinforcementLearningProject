@@ -8,8 +8,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as nn_functional
-from tic_env import OptimalPlayer, TictactoeEnv
 from tqdm.notebook import trange
+
+from tic_env import OptimalPlayer, TictactoeEnv
 
 
 class Agent(ABC):
