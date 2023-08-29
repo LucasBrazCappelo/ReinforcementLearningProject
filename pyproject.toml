@@ -76,28 +76,7 @@ exclude = "(.eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|.svn|_build|buck-out|buil
 [tool.isort]
 profile = "black"
 line_length = 100
-src_paths = ["ReinforcementLearningProject"]
-
-[tool.mypy]
-python_version = 3.8
-namespace_packages = false
-incremental = true
-cache_dir = ".mypy_cache"
-install_types = true
-warn_redundant_casts = true
-warn_return_any = true
-warn_unused_configs = true
-warn_unused_ignores = false
-allow_redefinition = true
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = false
-strict_optional = true
-strict_equality = true
-explicit_package_bases = false
-follow_imports = "skip"
+src_paths = ["ascent"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
