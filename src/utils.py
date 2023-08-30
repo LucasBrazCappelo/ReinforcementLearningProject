@@ -8,8 +8,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as nn_functional
-from tic_env import OptimalPlayer, TictactoeEnv
 from tqdm.notebook import trange
+
+from src.tic_env import OptimalPlayer, TictactoeEnv
 
 
 class Agent(ABC):
@@ -420,12 +421,13 @@ def play_games(
                 move = agent.act(grid)
 
             bad_move: bool = env.grid[move] != 0
+            winner: Optional[str]
             if bad_move:
                 env.end = True
                 end: bool = True
                 env.num_step += 1
                 env.current_player = "X" if env.num_step % 2 == 0 else "O"
-                winner: str = env.current_player
+                winner = env.current_player
             else:
                 grid, end, winner = env.step(move, print_grid=False)
 
